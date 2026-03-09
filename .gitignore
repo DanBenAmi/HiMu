@@ -1,0 +1,57 @@
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+env/
+.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Model weights and caches
+models_weights/
+*.pt
+*.pth
+*.bin
+*.safetensors
+!requirements*.txt
+
+# Feature caches
+cache/
+*.npz
+*.npy
+
+# Environment
+.env
+.env.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+
+HiMu_ECCV_2026 (4) 2
+himu.egg-info/
+.pytest_cache/
+.claude/
+CLAUDE.md

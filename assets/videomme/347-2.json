@@ -1,0 +1,22 @@
+{
+  "question_id": "347-2",
+  "video_id": "VQKpMmBDtZo",
+  "video_path": "assets/videomme/VQKpMmBDtZo.mp4",
+  "question": "What significant event increased the number of objects in Earth's orbit in the video?",
+  "candidates": [
+    "A. A country conducted a large-scale launch of a satellite constellation.",
+    "B. The International Space Station discarded some obsolete modules.",
+    "C. The Iridium-Cosmos collision in 2009.",
+    "D. An old weather satellite disintegrated, creating a large amount of debris."
+  ],
+  "answer": "C. The Iridium-Cosmos collision in 2009.",
+  "answer_letter": "C",
+  "answer_index": 2,
+  "subtitle_path": "assets/videomme/VQKpMmBDtZo.srt",
+  "metadata": {
+    "task_type": "Object Reasoning",
+    "domain": "Knowledge",
+    "sub_category": "Astronomy",
+    "duration": "medium"
+  }
+}
