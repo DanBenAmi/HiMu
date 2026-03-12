@@ -57,7 +57,7 @@ class TestBandwidthMatchedSmoother:
 class TestExpertModalityMap:
     def test_visual_experts(self):
         assert EXPERT_MODALITY_MAP["CLIP"] == "visual"
-        assert EXPERT_MODALITY_MAP["YOLO"] == "visual"
+        assert EXPERT_MODALITY_MAP["OVD"] == "visual"
         assert EXPERT_MODALITY_MAP["OCR"] == "visual"
 
     def test_audio_experts(self):

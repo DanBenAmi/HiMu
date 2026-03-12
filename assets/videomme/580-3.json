@@ -1,0 +1,22 @@
+{
+  "question_id": "580-3",
+  "video_id": "LVRcD_-ht3g",
+  "video_path": "assets/videomme/LVRcD_-ht3g.mp4",
+  "question": "What does a black elephant do in this video?",
+  "candidates": [
+    "A. Helping a man in river.",
+    "B. Finding fishes for food.",
+    "C. Going across the river.",
+    "D. Washing itself."
+  ],
+  "answer": "A. Helping a man in river.",
+  "answer_letter": "A",
+  "answer_index": 0,
+  "subtitle_path": "assets/videomme/LVRcD_-ht3g.srt",
+  "metadata": {
+    "task_type": "Action Recognition",
+    "domain": "Life Record",
+    "sub_category": "Pet & Animal",
+    "duration": "medium"
+  }
+}

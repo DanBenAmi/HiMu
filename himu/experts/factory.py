@@ -4,7 +4,7 @@ from typing import Optional, Dict
 import logging
 
 from .base import BaseExpert
-from .yolo import YOLOExpert
+from .ovd import OVDExpert
 from .ocr import OCRExpert
 from .clip import OpenCLIPExpert
 from .asr import ASRExpert
@@ -16,7 +16,7 @@ log = logging.getLogger(__name__)
 class ExpertFactory:
     """Factory for creating expert instances."""
 
-    VISUAL_EXPERTS = ["YOLO", "CLIP", "OCR"]
+    VISUAL_EXPERTS = ["OVD", "CLIP", "OCR"]
     AUDIO_EXPERTS = ["ASR", "CLAP"]
 
     @staticmethod
@@ -31,7 +31,7 @@ class ExpertFactory:
         Create an expert instance.
 
         Args:
-            expert_type: One of "OCR", "YOLO", "CLIP", "ASR", "CLAP"
+            expert_type: One of "OCR", "OVD", "CLIP", "ASR", "CLAP"
             device: Device for inference
             clip_config: Optional CLIP model configuration dict
             weights_dir: Optional custom directory for model weights
@@ -40,8 +40,8 @@ class ExpertFactory:
         if expert_type == "OCR":
             return OCRExpert(device=device)
 
-        elif expert_type == "YOLO":
-            return YOLOExpert(device=device, weights_dir=weights_dir)
+        elif expert_type == "OVD":
+            return OVDExpert(device=device, weights_dir=weights_dir)
 
         elif expert_type == "CLIP":
             return ExpertFactory._create_clip_expert(device, clip_config, weights_dir)

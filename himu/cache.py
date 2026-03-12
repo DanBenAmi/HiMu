@@ -6,7 +6,7 @@ video skip expensive expert inference.  Cached features:
   - OCR per-frame text detections (.json)
   - ASR transcript segments (.json)
   - CLAP frame embeddings (.npz)
-YOLO is NOT cached because it is query-conditioned.
+OVD is NOT cached because it is query-conditioned.
 """
 
 import hashlib

@@ -1,0 +1,22 @@
+{
+  "question_id": "580-2",
+  "video_id": "LVRcD_-ht3g",
+  "video_path": "assets/videomme/LVRcD_-ht3g.mp4",
+  "question": "Why does the black dog hold the goose?",
+  "candidates": [
+    "A. Protecting the cameraman from attacks of the goose.",
+    "B. Consume the goose as food.",
+    "C. Playing with the goose.",
+    "D. Letting the goose go elsewhere."
+  ],
+  "answer": "A. Protecting the cameraman from attacks of the goose.",
+  "answer_letter": "A",
+  "answer_index": 0,
+  "subtitle_path": "assets/videomme/LVRcD_-ht3g.srt",
+  "metadata": {
+    "task_type": "Action Reasoning",
+    "domain": "Life Record",
+    "sub_category": "Pet & Animal",
+    "duration": "medium"
+  }
+}

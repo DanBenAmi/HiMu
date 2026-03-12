@@ -11,8 +11,8 @@ import sys
 from pathlib import Path
 
 
-VIDEO_URL = "https://www.youtube.com/watch?v=VQKpMmBDtZo"
-VIDEO_ID = "VQKpMmBDtZo"
+VIDEO_URL = "https://www.youtube.com/watch?v=LVRcD_-ht3g"
+VIDEO_ID = "LVRcD_-ht3g"
 
 # Browsers to try for cookie extraction (in order of preference)
 BROWSERS = ["chrome", "chromium", "firefox", "edge", "opera", "brave", "safari"]
@@ -28,7 +28,7 @@ def ensure_yt_dlp():
 
 
 def download_video(cookies_from_browser=None):
-    output_dir = Path(__file__).parent
+    output_dir = Path("/Users/danbenami/Downloads")
     output_path = output_dir / f"{VIDEO_ID}.mp4"
 
     if output_path.exists():
@@ -38,33 +38,66 @@ def download_video(cookies_from_browser=None):
     ensure_yt_dlp()
     import yt_dlp
 
+    # Use the configuration that worked
     ydl_opts = {
-        "format": "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best",
+        "format": "18",  # Use format 18 (360p MP4) which is reliably available
         "outtmpl": str(output_dir / f"{VIDEO_ID}.%(ext)s"),
-        "merge_output_format": "mp4",
+        "quiet": False,
+        "no_warnings": False,
+        "retries": 10,
+        "fragment_retries": 10,
+        "ignoreerrors": True,
+        "extractor_args": {
+            "youtube": {
+                "player_skip": ["configs", "webpage"],
+                "player_client": ["android", "web"],
+                "skip": ["hls", "dash", "translated_subs"]
+            }
+        },
     }
 
-    browsers_to_try = [cookies_from_browser] if cookies_from_browser else BROWSERS
-
-    for browser in browsers_to_try:
-        opts = {**ydl_opts, "cookiesfrombrowser": (browser,)}
-        print(f"Downloading {VIDEO_URL} (cookies from {browser}) ...")
+    # Try with cookies if specified
+    if cookies_from_browser:
+        opts["cookiesfrombrowser"] = (cookies_from_browser,)
+        print(f"Downloading {VIDEO_URL} (cookies from {cookies_from_browser}) ...")
         try:
             with yt_dlp.YoutubeDL(opts) as ydl:
-                ydl.download([VIDEO_URL])
+                info = ydl.extract_info(VIDEO_URL, download=True)
+                if info:
+                    print(f"Download completed successfully!")
+                    print(f"Title: {info.get('title', 'Unknown')}")
             print(f"Saved to {output_path}")
             return output_path
         except Exception as e:
-            if cookies_from_browser:
-                raise
-            print(f"  {browser} failed: {e}\n")
+            print(f"Download with cookies failed: {e}")
+            print("Trying without cookies...")
 
-    # Last resort: try without cookies
+    # Try without cookies (this is what worked)
+    opts.pop("cookiesfrombrowser", None)
     print(f"Downloading {VIDEO_URL} (no cookies) ...")
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        ydl.download([VIDEO_URL])
-    print(f"Saved to {output_path}")
-    return output_path
+    
+    try:
+        with yt_dlp.YoutubeDL(opts) as ydl:
+            info = ydl.extract_info(VIDEO_URL, download=True)
+            if info:
+                print(f"Download completed successfully!")
+                print(f"Title: {info.get('title', 'Unknown')}")
+        print(f"Saved to {output_path}")
+        return output_path
+    except Exception as e:
+        print(f"Download failed: {e}")
+        
+        # Fallback to even simpler format if needed
+        print("Trying with alternative format...")
+        simple_opts = {
+            "format": "best[ext=mp4]/best",
+            "outtmpl": str(output_dir / f"{VIDEO_ID}.mp4"),
+        }
+        
+        with yt_dlp.YoutubeDL(simple_opts) as ydl:
+            ydl.download([VIDEO_URL])
+        print(f"Saved to {output_path}")
+        return output_path
 
 
 if __name__ == "__main__":

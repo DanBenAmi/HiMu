@@ -1,7 +1,7 @@
 """Expert models for grounding atomic predicates to truth signals."""
 
 from .base import BaseExpert, get_models_weights_dir
-from .yolo import YOLOExpert
+from .ovd import OVDExpert
 from .ocr import OCRExpert
 from .clip import OpenCLIPExpert
 from .asr import ASRExpert
@@ -11,7 +11,7 @@ from .factory import ExpertFactory
 __all__ = [
     "BaseExpert",
     "get_models_weights_dir",
-    "YOLOExpert",
+    "OVDExpert",
     "OCRExpert",
     "OpenCLIPExpert",
     "ASRExpert",

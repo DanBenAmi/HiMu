@@ -1,0 +1,22 @@
+{
+  "question_id": "580-1",
+  "video_id": "LVRcD_-ht3g",
+  "video_path": "assets/videomme/LVRcD_-ht3g.mp4",
+  "question": "What does a black dog do in water?",
+  "candidates": [
+    "A. Assisting a boy in water.",
+    "B. Submerging a boy in water.",
+    "C. Engaging with a boy.",
+    "D. Searching for fish."
+  ],
+  "answer": "A. Assisting a boy in water.",
+  "answer_letter": "A",
+  "answer_index": 0,
+  "subtitle_path": "assets/videomme/LVRcD_-ht3g.srt",
+  "metadata": {
+    "task_type": "Action Recognition",
+    "domain": "Life Record",
+    "sub_category": "Pet & Animal",
+    "duration": "medium"
+  }
+}

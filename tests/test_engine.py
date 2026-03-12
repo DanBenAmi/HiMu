@@ -16,12 +16,12 @@ class TestPipelineIntegration:
         num_frames = 100
         fps = 1.0
 
-        # Synthetic tree: AND(CLIP:sunset, YOLO:car)
+        # Synthetic tree: AND(CLIP:sunset, OVD:car)
         tree = {
             "op": "AND",
             "children": [
                 {"op": "LEAF", "expert": "CLIP", "query": "sunset"},
-                {"op": "LEAF", "expert": "YOLO", "query": "car"},
+                {"op": "LEAF", "expert": "OVD", "query": "car"},
             ],
         }
 
@@ -29,20 +29,20 @@ class TestPipelineIntegration:
         clip_raw = np.random.rand(num_frames).astype(np.float32)
         clip_raw[40:50] = 0.9  # sunset region
 
-        yolo_raw = np.random.rand(num_frames).astype(np.float32) * 0.3
-        yolo_raw[42:48] = 0.85  # car visible during sunset
+        ovd_raw = np.random.rand(num_frames).astype(np.float32) * 0.3
+        ovd_raw[42:48] = 0.85  # car visible during sunset
 
         # Stage 3: Normalization + smoothing
         normalizer = ScoreNormalizer(method="robust", gamma=3.0)
         smoother = BandwidthMatchedSmoother(fps=fps)
 
         clip_norm = normalizer.normalize(clip_raw)
-        yolo_norm = normalizer.normalize(yolo_raw)
+        ovd_norm = normalizer.normalize(ovd_raw)
 
         clip_smooth = smoother.smooth_signal(clip_norm, EXPERT_MODALITY_MAP["CLIP"])
-        yolo_smooth = smoother.smooth_signal(yolo_norm, EXPERT_MODALITY_MAP["YOLO"])
+        ovd_smooth = smoother.smooth_signal(ovd_norm, EXPERT_MODALITY_MAP["OVD"])
 
-        frame_scores = {0: clip_smooth, 1: yolo_smooth}
+        frame_scores = {0: clip_smooth, 1: ovd_smooth}
 
         # Stage 4: Logic composition
         engine = LogicEngine(kappa=2.0, fps=fps, and_mode="product")
@@ -59,7 +59,7 @@ class TestPipelineIntegration:
         assert overlap_mean > non_overlap_mean
 
         # Stage 5: Frame selection
-        selector = create_selector(mode="score_ranked")
+        selector = create_selector(mode="pass")
         top_indices = selector.select(truth_curve, top_k=16, fps=fps)
 
         assert len(top_indices) == 16

@@ -21,7 +21,7 @@ log = logging.getLogger(__name__)
 # Approximate peak VRAM in GB per expert (for auto-allocation)
 _VRAM_COST = {
     "CLIP": 6.0,
-    "YOLO": 4.0,
+    "OVD": 4.0,
     "OCR": 2.0,
     "ASR": 3.0,
     "CLAP": 2.0,
@@ -190,9 +190,9 @@ class MultiGPUEngine:
                 self.cache.save_ocr(video_path, fps, texts)
             return batch_scores
 
-        elif expert_type == "YOLO":
+        elif expert_type == "OVD":
             return expert.compute_batch_scores(
-                frames, queries, batch_size=self.config.yolo.batch_size
+                frames, queries, batch_size=self.config.ovd.batch_size
             )
 
         elif expert_type == "ASR":

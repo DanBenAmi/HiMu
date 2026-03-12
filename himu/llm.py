@@ -22,7 +22,7 @@ class LogicalTreeNode(BaseModel):
     """Recursive Pydantic model for the logical query tree."""
 
     op: Literal["AND", "OR", "SEQ", "RIGHT_AFTER", "LEAF"]
-    expert: Optional[Literal["OCR", "YOLO", "CLIP", "ASR", "CLAP"]] = None
+    expert: Optional[Literal["OCR", "OVD", "CLIP", "ASR", "CLAP"]] = None
     query: Optional[str] = None
     children: Optional[List["LogicalTreeNode"]] = None
 
@@ -32,7 +32,7 @@ class LogicalTreeNode(BaseModel):
                 "op": "AND",
                 "children": [
                     {"op": "LEAF", "expert": "OCR", "query": "Welcome"},
-                    {"op": "LEAF", "expert": "YOLO", "query": "red car"}
+                    {"op": "LEAF", "expert": "OVD", "query": "red car"}
                 ]
             }
         }
@@ -88,7 +88,7 @@ def repair_tree(node: dict) -> dict:
 
 def _expert_literals_str(use_asr: bool, use_clap: bool) -> str:
     """Build the expert literal string for output format sections."""
-    experts = ['"OCR"', '"YOLO"', '"CLIP"']
+    experts = ['"OCR"', '"OVD"', '"CLIP"']
     if use_asr:
         experts.append('"ASR"')
     if use_clap:
@@ -104,57 +104,57 @@ def _build_examples(use_asr: bool, use_clap: bool) -> str:
         examples += """
 Example 1 - Temporal trigger with audio event:
 Q: "After the doorbell rings, who opens the door?" Options: ["A man", "A woman"]
-{"op":"SEQ","children":[{"op":"LEAF","expert":"CLAP","query":"doorbell ringing"},{"op":"AND","children":[{"op":"LEAF","expert":"CLIP","query":"opening door"},{"op":"LEAF","expert":"ASR","query":"door"},{"op":"OR","children":[{"op":"LEAF","expert":"YOLO","query":"man"},{"op":"LEAF","expert":"YOLO","query":"woman"}]}]}]}
+{"op":"SEQ","children":[{"op":"LEAF","expert":"CLAP","query":"doorbell ringing"},{"op":"AND","children":[{"op":"LEAF","expert":"CLIP","query":"opening door"},{"op":"LEAF","expert":"ASR","query":"door"},{"op":"OR","children":[{"op":"LEAF","expert":"OVD","query":"man"},{"op":"LEAF","expert":"OVD","query":"woman"}]}]}]}
 
 Example 2 - OCR + ASR for on-screen text with speech:
 Q: "What safety text appears when the instructor says caution?" Options: ["Wear goggles", "Keep distance"]
-{"op":"AND","children":[{"op":"LEAF","expert":"ASR","query":"caution"},{"op":"LEAF","expert":"YOLO","query":"person"},{"op":"OR","children":[{"op":"AND","children":[{"op":"LEAF","expert":"OCR","query":"goggles"},{"op":"LEAF","expert":"YOLO","query":"safety goggles"}]},{"op":"LEAF","expert":"OCR","query":"keep distance"}]}]}
+{"op":"AND","children":[{"op":"LEAF","expert":"ASR","query":"caution"},{"op":"LEAF","expert":"OVD","query":"person"},{"op":"OR","children":[{"op":"AND","children":[{"op":"LEAF","expert":"OCR","query":"goggles"},{"op":"LEAF","expert":"OVD","query":"safety goggles"}]},{"op":"LEAF","expert":"OCR","query":"keep distance"}]}]}
 
 Example 3 - Multimodal with CLAP for sounds:
 Q: "What happens during the chemical reaction?" Options: ["It bubbles", "It changes color", "It explodes"]
-{"op":"AND","children":[{"op":"LEAF","expert":"YOLO","query":"beaker"},{"op":"LEAF","expert":"ASR","query":"reaction"},{"op":"OR","children":[{"op":"AND","children":[{"op":"LEAF","expert":"CLIP","query":"liquid bubbling"},{"op":"LEAF","expert":"ASR","query":"bubbles"}]},{"op":"AND","children":[{"op":"LEAF","expert":"CLIP","query":"liquid changing color"},{"op":"LEAF","expert":"ASR","query":"color"}]},{"op":"AND","children":[{"op":"LEAF","expert":"CLIP","query":"explosion"},{"op":"LEAF","expert":"CLAP","query":"explosion sound"}]}]}]}
+{"op":"AND","children":[{"op":"LEAF","expert":"OVD","query":"beaker"},{"op":"LEAF","expert":"ASR","query":"reaction"},{"op":"OR","children":[{"op":"AND","children":[{"op":"LEAF","expert":"CLIP","query":"liquid bubbling"},{"op":"LEAF","expert":"ASR","query":"bubbles"}]},{"op":"AND","children":[{"op":"LEAF","expert":"CLIP","query":"liquid changing color"},{"op":"LEAF","expert":"ASR","query":"color"}]},{"op":"AND","children":[{"op":"LEAF","expert":"CLIP","query":"explosion"},{"op":"LEAF","expert":"CLAP","query":"explosion sound"}]}]}]}
 
 Example 4 - Ordering question (order unknown, use OR not SEQ):
 Q: "In which order are these tools used?" Options: represent different orderings of (a) Brush (b) Knife (c) Tape
-{"op":"AND","children":[{"op":"LEAF","expert":"ASR","query":"tools"},{"op":"OR","children":[{"op":"AND","children":[{"op":"LEAF","expert":"YOLO","query":"brush"},{"op":"LEAF","expert":"CLIP","query":"using brush"}]},{"op":"AND","children":[{"op":"LEAF","expert":"YOLO","query":"knife"},{"op":"LEAF","expert":"CLIP","query":"cutting"}]},{"op":"AND","children":[{"op":"LEAF","expert":"YOLO","query":"tape"},{"op":"LEAF","expert":"CLIP","query":"taping"}]}]}]}"""
+{"op":"AND","children":[{"op":"LEAF","expert":"ASR","query":"tools"},{"op":"OR","children":[{"op":"AND","children":[{"op":"LEAF","expert":"OVD","query":"brush"},{"op":"LEAF","expert":"CLIP","query":"using brush"}]},{"op":"AND","children":[{"op":"LEAF","expert":"OVD","query":"knife"},{"op":"LEAF","expert":"CLIP","query":"cutting"}]},{"op":"AND","children":[{"op":"LEAF","expert":"OVD","query":"tape"},{"op":"LEAF","expert":"CLIP","query":"taping"}]}]}]}"""
 
     elif use_asr:
         examples += """
 Example 1 - Speech-triggered with visual verification:
 Q: "What does the presenter show right after saying 'let me demonstrate'?" Options: ["A chart", "A product"]
-{"op":"RIGHT_AFTER","children":[{"op":"LEAF","expert":"ASR","query":"demonstrate"},{"op":"OR","children":[{"op":"AND","children":[{"op":"LEAF","expert":"YOLO","query":"chart"},{"op":"LEAF","expert":"CLIP","query":"showing chart"}]},{"op":"AND","children":[{"op":"LEAF","expert":"YOLO","query":"product"},{"op":"LEAF","expert":"CLIP","query":"showing product"}]}]}]}
+{"op":"RIGHT_AFTER","children":[{"op":"LEAF","expert":"ASR","query":"demonstrate"},{"op":"OR","children":[{"op":"AND","children":[{"op":"LEAF","expert":"OVD","query":"chart"},{"op":"LEAF","expert":"CLIP","query":"showing chart"}]},{"op":"AND","children":[{"op":"LEAF","expert":"OVD","query":"product"},{"op":"LEAF","expert":"CLIP","query":"showing product"}]}]}]}
 
 Example 2 - Scientific video with ASR overlap:
 Q: "What happens during the chemical reaction?" Options: ["It bubbles", "It changes color", "It explodes"]
-{"op":"AND","children":[{"op":"LEAF","expert":"YOLO","query":"beaker"},{"op":"LEAF","expert":"ASR","query":"reaction"},{"op":"OR","children":[{"op":"AND","children":[{"op":"LEAF","expert":"CLIP","query":"liquid bubbling"},{"op":"LEAF","expert":"ASR","query":"bubbles"}]},{"op":"AND","children":[{"op":"LEAF","expert":"CLIP","query":"liquid changing color"},{"op":"LEAF","expert":"ASR","query":"color"}]},{"op":"LEAF","expert":"CLIP","query":"explosion"}]}]}
+{"op":"AND","children":[{"op":"LEAF","expert":"OVD","query":"beaker"},{"op":"LEAF","expert":"ASR","query":"reaction"},{"op":"OR","children":[{"op":"AND","children":[{"op":"LEAF","expert":"CLIP","query":"liquid bubbling"},{"op":"LEAF","expert":"ASR","query":"bubbles"}]},{"op":"AND","children":[{"op":"LEAF","expert":"CLIP","query":"liquid changing color"},{"op":"LEAF","expert":"ASR","query":"color"}]},{"op":"LEAF","expert":"CLIP","query":"explosion"}]}]}
 
 Example 3 - Ordering question (order unknown, use OR not SEQ):
 Q: "In which order are these tools used?" Options: represent different orderings of (a) Brush (b) Knife (c) Tape
-{"op":"AND","children":[{"op":"LEAF","expert":"ASR","query":"tools"},{"op":"OR","children":[{"op":"AND","children":[{"op":"LEAF","expert":"YOLO","query":"brush"},{"op":"LEAF","expert":"CLIP","query":"using brush"}]},{"op":"AND","children":[{"op":"LEAF","expert":"YOLO","query":"knife"},{"op":"LEAF","expert":"CLIP","query":"cutting"}]},{"op":"AND","children":[{"op":"LEAF","expert":"YOLO","query":"tape"},{"op":"LEAF","expert":"CLIP","query":"taping"}]}]}]}"""
+{"op":"AND","children":[{"op":"LEAF","expert":"ASR","query":"tools"},{"op":"OR","children":[{"op":"AND","children":[{"op":"LEAF","expert":"OVD","query":"brush"},{"op":"LEAF","expert":"CLIP","query":"using brush"}]},{"op":"AND","children":[{"op":"LEAF","expert":"OVD","query":"knife"},{"op":"LEAF","expert":"CLIP","query":"cutting"}]},{"op":"AND","children":[{"op":"LEAF","expert":"OVD","query":"tape"},{"op":"LEAF","expert":"CLIP","query":"taping"}]}]}]}"""
 
     elif use_clap:
         examples += """
 Example 1 - Audio-triggered temporal query:
 Q: "After the doorbell rings, who opens the door?" Options: ["A man", "A woman"]
-{"op":"SEQ","children":[{"op":"LEAF","expert":"CLAP","query":"doorbell ringing"},{"op":"AND","children":[{"op":"LEAF","expert":"CLIP","query":"opening door"},{"op":"OR","children":[{"op":"LEAF","expert":"YOLO","query":"man"},{"op":"LEAF","expert":"YOLO","query":"woman"}]}]}]}
+{"op":"SEQ","children":[{"op":"LEAF","expert":"CLAP","query":"doorbell ringing"},{"op":"AND","children":[{"op":"LEAF","expert":"CLIP","query":"opening door"},{"op":"OR","children":[{"op":"LEAF","expert":"OVD","query":"man"},{"op":"LEAF","expert":"OVD","query":"woman"}]}]}]}
 
 Example 2 - Temporal sequence with visual context:
 Q: "What does the man do after the car leaves?" Options: ["Running", "Sleeping"]
-{"op":"SEQ","children":[{"op":"LEAF","expert":"CLIP","query":"car leaving"},{"op":"AND","children":[{"op":"LEAF","expert":"YOLO","query":"person"},{"op":"OR","children":[{"op":"LEAF","expert":"CLIP","query":"running"},{"op":"LEAF","expert":"CLIP","query":"sleeping"}]}]}]}"""
+{"op":"SEQ","children":[{"op":"LEAF","expert":"CLIP","query":"car leaving"},{"op":"AND","children":[{"op":"LEAF","expert":"OVD","query":"person"},{"op":"OR","children":[{"op":"LEAF","expert":"CLIP","query":"running"},{"op":"LEAF","expert":"CLIP","query":"sleeping"}]}]}]}"""
 
     else:
         examples += """
 Example 1 - Question with Options:
 Q: "What is the chef wearing while cooking?" Options: ["Blue apron", "Red jacket", "Green hat"]
-{"op":"AND","children":[{"op":"LEAF","expert":"YOLO","query":"chef"},{"op":"LEAF","expert":"CLIP","query":"person cooking in kitchen"},{"op":"OR","children":[{"op":"LEAF","expert":"CLIP","query":"wearing blue apron"},{"op":"LEAF","expert":"CLIP","query":"wearing red jacket"},{"op":"LEAF","expert":"CLIP","query":"wearing green hat"}]}]}
+{"op":"AND","children":[{"op":"LEAF","expert":"OVD","query":"chef"},{"op":"LEAF","expert":"CLIP","query":"person cooking in kitchen"},{"op":"OR","children":[{"op":"LEAF","expert":"CLIP","query":"wearing blue apron"},{"op":"LEAF","expert":"CLIP","query":"wearing red jacket"},{"op":"LEAF","expert":"CLIP","query":"wearing green hat"}]}]}
 
 Example 2 - Shot ordering question (detect each shot independently, NO SEQ):
 Q: "The video includes 4 shots: (1) A dog running on a beach (2) A sunset over the ocean (3) A woman surfing a wave (4) A lifeguard tower on sand. Select the correct order." Options: ["3->1->4->2", "2->4->1->3", "1->2->3->4"]
-{"op":"OR","children":[{"op":"AND","children":[{"op":"LEAF","expert":"YOLO","query":"dog"},{"op":"LEAF","expert":"CLIP","query":"dog running on sandy beach"}]},{"op":"AND","children":[{"op":"LEAF","expert":"CLIP","query":"sunset over ocean"},{"op":"LEAF","expert":"CLIP","query":"orange sky reflected on water"}]},{"op":"AND","children":[{"op":"LEAF","expert":"YOLO","query":"surfer"},{"op":"LEAF","expert":"CLIP","query":"woman surfing a wave"}]},{"op":"AND","children":[{"op":"LEAF","expert":"YOLO","query":"lifeguard tower"},{"op":"LEAF","expert":"CLIP","query":"lifeguard tower on sandy beach"}]}]}
+{"op":"OR","children":[{"op":"AND","children":[{"op":"LEAF","expert":"OVD","query":"dog"},{"op":"LEAF","expert":"CLIP","query":"dog running on sandy beach"}]},{"op":"AND","children":[{"op":"LEAF","expert":"CLIP","query":"sunset over ocean"},{"op":"LEAF","expert":"CLIP","query":"orange sky reflected on water"}]},{"op":"AND","children":[{"op":"LEAF","expert":"OVD","query":"surfer"},{"op":"LEAF","expert":"CLIP","query":"woman surfing a wave"}]},{"op":"AND","children":[{"op":"LEAF","expert":"OVD","query":"lifeguard tower"},{"op":"LEAF","expert":"CLIP","query":"lifeguard tower on sandy beach"}]}]}
 
 Example 3 - OCR + Visual:
 Q: "What warning label is shown on the chemical bottle?" Options: ["Flammable", "Corrosive"]
-{"op":"AND","children":[{"op":"LEAF","expert":"YOLO","query":"chemical bottle"},{"op":"LEAF","expert":"CLIP","query":"warning label on bottle"},{"op":"OR","children":[{"op":"AND","children":[{"op":"LEAF","expert":"OCR","query":"flammable"},{"op":"LEAF","expert":"CLIP","query":"fire hazard symbol"}]},{"op":"AND","children":[{"op":"LEAF","expert":"OCR","query":"corrosive"},{"op":"LEAF","expert":"CLIP","query":"corrosion hazard symbol"}]}]}]}"""
+{"op":"AND","children":[{"op":"LEAF","expert":"OVD","query":"chemical bottle"},{"op":"LEAF","expert":"CLIP","query":"warning label on bottle"},{"op":"OR","children":[{"op":"AND","children":[{"op":"LEAF","expert":"OCR","query":"flammable"},{"op":"LEAF","expert":"CLIP","query":"fire hazard symbol"}]},{"op":"AND","children":[{"op":"LEAF","expert":"OCR","query":"corrosive"},{"op":"LEAF","expert":"CLIP","query":"corrosion hazard symbol"}]}]}]}"""
 
     return examples
 
@@ -171,11 +171,11 @@ Convert Video QA questions into structured logical trees that leverage ALL relev
 ### THE EXPERTS
 
 **Visual Experts:**
-1. **YOLO** - Open-Vocabulary Object Detection (YOLO-World)
+1. **OVD** - Open-Vocabulary Object Detection (YOLO-World)
    - For: Physical objects, people, and visual attributes
    - Examples: "person", "car", "dog", "red car", "man in suit", "white dog"
    - Supports attribute+noun phrases. Never include numbers, counts, or proper names.
-   - YOLO CANNOT detect: countries, teams, names, states, emotions, actions, text, numbers
+   - OVD CANNOT detect: countries, teams, names, states, emotions, actions, text, numbers
 
 2. **OCR** - On-Screen Text Recognition
    - For: Text visible on screen - signs, labels, jersey numbers, names, scoreboards
@@ -238,7 +238,7 @@ Convert Video QA questions into structured logical trees that leverage ALL relev
     # Key rules
     rules = "\n### KEY RULES\n"
     if use_asr or use_clap:
-        rules += "\n1. **MULTIMODAL**: Each MCQ option should combine visual AND audio evidence when possible. Never make a tree with only one expert type. Even for narration/documentary questions, always include visual experts (CLIP for scenes, OCR for on-screen text, YOLO for visible objects) alongside ASR."
+        rules += "\n1. **MULTIMODAL**: Each MCQ option should combine visual AND audio evidence when possible. Never make a tree with only one expert type. Even for narration/documentary questions, always include visual experts (CLIP for scenes, OCR for on-screen text, OVD for visible objects) alongside ASR."
     else:
         rules += "\n1. **MULTIMODAL**: Use multiple visual experts when possible. Never make a tree with only one expert type."
 
@@ -246,23 +246,23 @@ Convert Video QA questions into structured logical trees that leverage ALL relev
         rules += "\n2. **ASR OVERLAP**: Add ASR leaves with short keywords alongside visual leaves - narrators often describe what is shown."
 
     rules += "\n3. **MCQ STRUCTURE**: AND(shared_context, OR(option_1, option_2, ...)) - factor shared elements OUT of the OR. ALL options MUST be inside the OR."
-    rules += '\n4. **DECOMPOSE RICH DESCRIPTIONS**: When a scene/option describes multiple elements (person + attributes + objects + setting), create separate leaves for each: YOLO for objects/people (e.g. "bald man", "large weapon"), CLIP for settings/states (e.g. "dark futuristic setting", "ornate structure"). Extract ALL key visual details, not just one summary leaf.'
+    rules += '\n4. **DECOMPOSE RICH DESCRIPTIONS**: When a scene/option describes multiple elements (person + attributes + objects + setting), create separate leaves for each: OVD for objects/people (e.g. "bald man", "large weapon"), CLIP for settings/states (e.g. "dark futuristic setting", "ornate structure"). Extract ALL key visual details, not just one summary leaf.'
     rules += "\n5. **SEQ ONLY FOR KNOWN ORDER**: Only use SEQ when the question explicitly states the order (\"after X\", \"first X then Y\"). If the question ASKS about ordering of shots/scenes, do NOT use SEQ anywhere — build one AND per shot and wrap in a flat OR. Each shot appears exactly once."
 
     if use_asr:
-        rules += "\n6. **NAMES -> OCR + ASR**: Any proper names (people, teams, characters, countries) -> OCR (text on screen) + ASR (spoken). For character appearances, also add CLIP for visual description. Never use YOLO for names."
+        rules += "\n6. **NAMES -> OCR + ASR**: Any proper names (people, teams, characters, countries) -> OCR (text on screen) + ASR (spoken). For character appearances, also add CLIP for visual description. Never use OVD for names."
     else:
-        rules += "\n6. **NAMES -> OCR**: Any proper names (people, teams, characters, countries) -> OCR (text on screen). For character appearances, also add CLIP for visual description. Never use YOLO for names."
+        rules += "\n6. **NAMES -> OCR**: Any proper names (people, teams, characters, countries) -> OCR (text on screen). For character appearances, also add CLIP for visual description. Never use OVD for names."
 
     rules += '\n7. **VISUAL STATES -> CLIP**: States like "injured", "celebrating", "sleeping" -> CLIP, not ASR alone.'
     rules += '\n8. **META-OPTIONS**: Options like "Same", "All of the above", "Cannot be determined", "Not mentioned" are NOT detectable - ALWAYS skip them in the OR. Only include options that describe observable events/objects.'
-    rules += '\n9. **ACTIONS IN OPTIONS**: When options describe actions (e.g. "driving a car", "spraying perfume"), use AND(YOLO:object, CLIP:action) per option, not YOLO alone.'
-    rules += "\n10. **TEMPORAL CAUSE**: In SEQ/RIGHT_AFTER, the cause child should be the triggering ACTION (CLIP), not just a person (YOLO)."
-    rules += '\n11. **OVERLAPPING EXPERTS**: It is encouraged to use multiple experts on overlapping subjects. E.g., YOLO:"basketball player" + CLIP:"basketball player scoring with a dunk" — YOLO detects the person while CLIP captures the action in context.'
+    rules += '\n9. **ACTIONS IN OPTIONS**: When options describe actions (e.g. "driving a car", "spraying perfume"), use AND(OVD:object, CLIP:action) per option, not OVD alone.'
+    rules += "\n10. **TEMPORAL CAUSE**: In SEQ/RIGHT_AFTER, the cause child should be the triggering ACTION (CLIP), not just a person (OVD)."
+    rules += '\n11. **OVERLAPPING EXPERTS**: It is encouraged to use multiple experts on overlapping subjects. E.g., OVD:"basketball player" + CLIP:"basketball player scoring with a dunk" — OVD detects the person while CLIP captures the action in context.'
     if use_asr or use_clap:
-        rules += '\n12. **VISUAL GROUNDING**: Never build ASR-only options. For each OR branch, always pair ASR with at least one visual expert. For abstract topics, add CLIP for the visible scene (e.g. "person speaking", "diagram on screen"), OCR for on-screen text, or YOLO for visible objects.'
+        rules += '\n12. **VISUAL GROUNDING**: Never build ASR-only options. For each OR branch, always pair ASR with at least one visual expert. For abstract topics, add CLIP for the visible scene (e.g. "person speaking", "diagram on screen"), OCR for on-screen text, or OVD for visible objects.'
     if use_asr:
-        rules += '\n13. **OVERLAPPING PREDICATES**: Mix experts with overlapping terms for robust detection. E.g., for "placing green onions on rack": YOLO:"rack", CLIP:"placing green onions on rack", ASR:"rack", ASR:"placed".'
+        rules += '\n13. **OVERLAPPING PREDICATES**: Mix experts with overlapping terms for robust detection. E.g., for "placing green onions on rack": OVD:"rack", CLIP:"placing green onions on rack", ASR:"rack", ASR:"placed".'
         rules += '\n14. **SUBTITLES -> ASR**: When the question refers to subtitles, use ASR expert to identify the text among spoken words, in addition to OCR for on-screen text.'
     parts.append(rules)
 
@@ -365,7 +365,7 @@ Output a JSON object following this schema:
 - children: array of nodes (only for non-LEAF nodes)
 
 Choose experts wisely:
-- YOLO: Specific, countable physical objects or people (e.g., "blue shirt", "black car", "man")
+- OVD: Specific, countable physical objects or people (e.g., "blue shirt", "black car", "man")
 - OCR: Specific text on screen, subtitles, or signs (e.g., "Plans", "upcoming plans")
 - CLIP: Actions, scene descriptions, atmosphere, or abstract concepts (e.g., "walking", "sunset", "argument")"""
 
@@ -404,114 +404,78 @@ Return only valid JSON."""
             raise RuntimeError(f"Failed to parse query with OpenAI (fallback): {str(e)}")
 
 
-class GeminiLLM(BaseLLM):
-    """Google Gemini implementation with structured outputs."""
+class Qwen3VLLLM(BaseLLM):
+    """Local Qwen3-VL implementation using HuggingFace transformers (text-only mode)."""
 
-    def __init__(self, api_key: Optional[str] = None, model: str = "gemini-2.0-flash", seed: int = 42):
-        try:
-            from google import genai
-        except ImportError:
-            raise ImportError("Please install google-genai: pip install google-genai")
-
-        self.api_key = api_key or os.getenv("GOOGLE_API_KEY")
-        if not self.api_key:
-            raise ValueError("Google API key not provided. Set GOOGLE_API_KEY env var or pass api_key parameter.")
-
-        self.client = genai.Client(api_key=self.api_key)
-        self.genai = genai
-        self.model = model
-        self.seed = seed
-
-    def parse_query_to_tree(self, query: str, enabled_audio_experts: Optional[Dict[str, bool]] = None, temperature: Optional[float] = None) -> dict:
-        """Parse query using Gemini with JSON mode."""
-        use_asr, use_clap = self._resolve_audio_flags(enabled_audio_experts)
-        system_prompt = _build_system_prompt(use_asr, use_clap)
-        temp = temperature if temperature is not None else 0.0
-
-        try:
-            response = self.client.models.generate_content(
-                model=self.model,
-                contents=f"{system_prompt}\n\nQuery: {query}",
-                config=self.genai.types.GenerateContentConfig(
-                    temperature=temp,
-                    response_mime_type="application/json",
-                    seed=self.seed,
-                )
-            )
-
-            tree_dict = json.loads(response.text)
-            tree_dict = repair_tree(tree_dict)
-            tree_node = LogicalTreeNode(**tree_dict)
-            return tree_node.model_dump()
-
-        except Exception as e:
-            raise RuntimeError(f"Failed to parse query with Gemini: {str(e)}")
-
-
-class Qwen3LLM(BaseLLM):
-    """Local Qwen3 implementation using HuggingFace transformers."""
-
-    def __init__(self, model: str = "Qwen/Qwen3-8B", device: str = "cuda:0"):
+    def __init__(self, model: str = "Qwen/Qwen3-VL-8B-Instruct", device: str = "cuda:0"):
         try:
             import torch
-            from transformers import AutoModelForCausalLM, AutoTokenizer
+            from transformers import AutoProcessor, Qwen3VLForConditionalGeneration
         except ImportError:
             raise ImportError("Please install transformers and torch")
 
         self.model_name = model
         self.device = device
 
-        self.tokenizer = AutoTokenizer.from_pretrained(
+        self.processor = AutoProcessor.from_pretrained(
             model,
-            trust_remote_code=True
+            trust_remote_code=True,
         )
-        self.model = AutoModelForCausalLM.from_pretrained(
+        self.model = Qwen3VLForConditionalGeneration.from_pretrained(
             model,
             torch_dtype=torch.bfloat16,
             device_map=device,
-            trust_remote_code=True
-        )
-        self.model.eval()
+            trust_remote_code=True,
+        ).eval()
 
     def parse_query_to_tree(self, query: str, enabled_audio_experts: Optional[Dict[str, bool]] = None, temperature: Optional[float] = None) -> dict:
-        """Parse query using local Qwen3 model."""
+        """Parse query using local Qwen3-VL model in text-only mode."""
+        import gc
+        import re
         import torch
 
         use_asr, use_clap = self._resolve_audio_flags(enabled_audio_experts)
         system_prompt = _build_system_prompt(use_asr, use_clap)
 
         messages = [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": f"Query: {query}"}
+            {"role": "system", "content": [{"type": "text", "text": system_prompt}]},
+            {"role": "user", "content": [{"type": "text", "text": f"Query: {query}"}]},
         ]
 
-        text = self.tokenizer.apply_chat_template(
+        text = self.processor.apply_chat_template(
             messages,
             tokenize=False,
             add_generation_prompt=True,
-            enable_thinking=False
+            enable_thinking=False,
         )
 
-        inputs = self.tokenizer(text, return_tensors="pt").to(self.device)
+        inputs = self.processor(
+            text=[text],
+            images=None,
+            videos=None,
+            padding=True,
+            return_tensors="pt",
+        ).to(self.device)
 
         # Use sampling when temperature is provided, otherwise greedy
         if temperature is not None:
             gen_kwargs = dict(max_new_tokens=2048, temperature=temperature, top_p=0.9, do_sample=True)
         else:
-            gen_kwargs = dict(max_new_tokens=2048, temperature=None, top_p=None, do_sample=False)
+            gen_kwargs = dict(max_new_tokens=2048, do_sample=False)
 
         try:
             with torch.no_grad():
                 output_ids = self.model.generate(**inputs, **gen_kwargs)
 
-            generated_ids = output_ids[:, inputs.input_ids.shape[1]:]
-            response_text = self.tokenizer.batch_decode(
-                generated_ids,
-                skip_special_tokens=True
+            input_len = inputs["input_ids"].shape[1]
+            generated = [out[input_len:] for out in output_ids]
+            response_text = self.processor.batch_decode(
+                generated,
+                skip_special_tokens=True,
+                clean_up_tokenization_spaces=False,
             )[0].strip()
 
             # Strip any leftover <think>...</think> tags
-            import re
             response_text = re.sub(r'<think>.*?</think>', '', response_text, flags=re.DOTALL).strip()
 
             # Extract JSON from response (handle potential markdown wrapping)
@@ -540,7 +504,11 @@ class Qwen3LLM(BaseLLM):
             return tree_node.model_dump()
 
         except Exception as e:
-            raise RuntimeError(f"Failed to parse query with Qwen3: {str(e)}")
+            raise RuntimeError(f"Failed to parse query with Qwen3-VL: {str(e)}")
+        finally:
+            del inputs
+            torch.cuda.empty_cache()
+            gc.collect()
 
 
 def create_llm(provider: str = "openai", model: Optional[str] = None, api_key: Optional[str] = None, device: Optional[str] = None, seed: int = 42) -> BaseLLM:
@@ -548,11 +516,11 @@ def create_llm(provider: str = "openai", model: Optional[str] = None, api_key: O
     Factory function to create an LLM instance.
 
     Args:
-        provider: LLM provider ("openai", "gemini", or "qwen3")
+        provider: LLM provider ("openai" or "qwen3vl")
         model: Model name (defaults to provider's default)
-        api_key: API key (defaults to env var, not used for qwen3)
-        device: Device for local models (qwen3 only, defaults to "cuda:0")
-        seed: Seed for deterministic outputs (OpenAI/Gemini only)
+        api_key: API key (defaults to env var, not used for qwen3vl)
+        device: Device for local models (qwen3vl only, defaults to "cuda:0")
+        seed: Seed for deterministic outputs (OpenAI only)
 
     Returns:
         BaseLLM instance
@@ -561,9 +529,7 @@ def create_llm(provider: str = "openai", model: Optional[str] = None, api_key: O
 
     if provider == "openai":
         return OpenAILLM(api_key=api_key, model=model or "gpt-4o", seed=seed)
-    elif provider == "gemini":
-        return GeminiLLM(api_key=api_key, model=model or "gemini-2.0-flash", seed=seed)
-    elif provider == "qwen3":
-        return Qwen3LLM(model=model or "Qwen/Qwen3-8B", device=device or "cuda:0")
+    elif provider == "qwen3vl":
+        return Qwen3VLLLM(model=model or "Qwen/Qwen3-VL-8B-Instruct", device=device or "cuda:0")
     else:
-        raise ValueError(f"Unknown LLM provider: {provider}. Supported: 'openai', 'gemini', 'qwen3'")
+        raise ValueError(f"Unknown LLM provider: {provider}. Supported: 'openai', 'qwen3vl'")

@@ -37,7 +37,7 @@ clip = [
     "torch>=2.1",
     "pillow",
 ]
-yolo = [
+ovd = [
     "ultralytics>=8.1",
     "torch>=2.1",
 ]
@@ -56,7 +56,7 @@ clap = [
     "torch>=2.1",
     "librosa>=0.10",
 ]
-all = ["himu[clip,yolo,ocr,asr,clap]"]
+all = ["himu[clip,ovd,ocr,asr,clap]"]
 dev = [
     "pytest>=7.0",
     "pytest-cov",

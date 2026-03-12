@@ -24,7 +24,7 @@ HiMu is a 5-stage pipeline:
    | Expert | Modality | Backbone | Detects |
    |--------|----------|----------|---------|
    | CLIP | Visual | DFN5B ViT-H/14 | Scenes, actions, concepts |
-   | YOLO | Visual | YOLO-World v2 | Objects, people |
+   | OVD | Visual | YOLO-World v2 | Objects, people |
    | OCR | Visual | docTR | On-screen text |
    | ASR | Audio | faster-whisper turbo | Speech content |
    | CLAP | Audio | LAION CLAP | Environmental sounds |
@@ -56,7 +56,7 @@ Install individual expert backends:
 
 ```bash
 pip install "himu[clip]"      # CLIP (OpenCLIP)
-pip install "himu[yolo]"      # YOLO-World (object detection)
+pip install "himu[ovd]"       # YOLO-World (object detection)
 pip install "himu[ocr]"       # docTR (on-screen text)
 pip install "himu[asr]"       # faster-whisper (speech)
 pip install "himu[clap]"      # CLAP (environmental audio)
@@ -191,7 +191,7 @@ selector = HiMuSelector(cache_dir="/tmp/himu_cache")
 # Extract features once
 selector.cache_features("video.mp4")
 
-# Fast per-query selection (only YOLO re-runs)
+# Fast per-query selection (only OVD re-runs)
 for q in questions:
     result = selector.select_frames("video.mp4", q)
 ```

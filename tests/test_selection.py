@@ -5,8 +5,7 @@ import pytest
 
 from himu.selection import (
     ScoreRankedSelection,
-    PeakBasedSelection,
-    TieredPeakSelection,
+    PASSSelection,
     create_selector,
 )
 
@@ -34,24 +33,9 @@ class TestScoreRankedSelection:
                 assert abs(indices[i] - indices[j]) >= 2
 
 
-class TestPeakBasedSelection:
-    def test_finds_peaks(self):
-        selector = PeakBasedSelection(prominence=0.01)
-        scores = np.array([0.0, 0.5, 0.0, 0.0, 0.8, 0.0, 0.0, 0.3, 0.0])
-        indices = selector.select(scores, top_k=3, fps=1.0)
-        assert 4 in indices  # highest peak
-        assert 1 in indices  # second peak
-
-    def test_fills_to_k(self):
-        selector = PeakBasedSelection()
-        scores = np.array([0.0, 1.0, 0.0, 0.0, 0.0])
-        indices = selector.select(scores, top_k=3, fps=1.0)
-        assert len(indices) == 3
-
-
-class TestTieredPeakSelection:
+class TestPASSSelection:
     def test_basic(self):
-        selector = TieredPeakSelection()
+        selector = PASSSelection()
         scores = np.zeros(100)
         scores[20] = 1.0
         scores[50] = 0.8
@@ -59,19 +43,35 @@ class TestTieredPeakSelection:
         indices = selector.select(scores, top_k=5, fps=1.0)
         assert len(indices) == 5
 
+    def test_finds_peaks(self):
+        selector = PASSSelection()
+        scores = np.zeros(100)
+        scores[20] = 1.0
+        scores[50] = 0.8
+        scores[80] = 0.6
+        indices = selector.select(scores, top_k=16, fps=1.0)
+        assert 20 in indices  # highest peak
+        assert 50 in indices  # second peak
+
+    def test_fills_to_k(self):
+        selector = PASSSelection()
+        scores = np.array([0.0, 1.0, 0.0, 0.0, 0.0])
+        indices = selector.select(scores, top_k=3, fps=1.0)
+        assert len(indices) == 3
+
 
 class TestFactory:
+    def test_pass(self):
+        s = create_selector(mode="pass")
+        assert isinstance(s, PASSSelection)
+
     def test_score_ranked(self):
         s = create_selector(mode="score_ranked")
         assert isinstance(s, ScoreRankedSelection)
 
-    def test_peak_nms(self):
-        s = create_selector(mode="peak_nms")
-        assert isinstance(s, PeakBasedSelection)
-
-    def test_peak_nms_v2(self):
-        s = create_selector(mode="peak_nms_v2")
-        assert isinstance(s, TieredPeakSelection)
+    def test_default_is_pass(self):
+        s = create_selector()
+        assert isinstance(s, PASSSelection)
 
     def test_unknown_raises(self):
         with pytest.raises(ValueError):

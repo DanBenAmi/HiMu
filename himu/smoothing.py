@@ -7,7 +7,7 @@ from scipy.ndimage import gaussian_filter1d
 
 # Modality mapping for experts
 EXPERT_MODALITY_MAP = {
-    "YOLO": "visual",
+    "OVD": "visual",
     "CLIP": "visual",
     "OCR": "visual",
     "ASR": "speech",
@@ -20,7 +20,7 @@ class BandwidthMatchedSmoother:
     Apply modality-specific Gaussian smoothing to expert signals.
 
     Different modalities have different temporal precisions:
-    - Visual signals (CLIP, YOLO, OCR) are frame-precise
+    - Visual signals (CLIP, OVD, OCR) are frame-precise
     - Speech signals (ASR/Whisper) have timing noise from word boundaries (~1-2s)
     - Audio signals (CLAP) have window-level granularity (~2s)
 

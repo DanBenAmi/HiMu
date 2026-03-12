@@ -1,30 +1,60 @@
 """Audio extraction utilities for HiMu."""
 
-import os
-import sys
+import io
+import shutil
+import subprocess
 import numpy as np
-from contextlib import contextmanager
 from typing import List, Optional
 import warnings
 
 
-@contextmanager
-def _suppress_c_stderr():
-    """Temporarily redirect C-level stderr to /dev/null.
+def _load_audio(video_path: str, sample_rate: int = 16000) -> np.ndarray:
+    """Load audio from a video/audio file using ffmpeg directly.
 
-    Suppresses messages from C libraries (e.g., ffmpeg av1 codec warnings)
-    that bypass Python's logging/warnings system.
+    Avoids librosa's fragile audioread fallback chain which breaks when
+    C-level stderr is suppressed.
+
+    Returns:
+        Audio as float32 numpy array (samples,), mono, at target sample rate.
+
+    Raises:
+        RuntimeError: If ffmpeg is not found or audio extraction fails.
     """
-    stderr_fd = sys.stderr.fileno()
-    old = os.dup(stderr_fd)
-    devnull = os.open(os.devnull, os.O_WRONLY)
-    try:
-        os.dup2(devnull, stderr_fd)
-        yield
-    finally:
-        os.dup2(old, stderr_fd)
-        os.close(old)
-        os.close(devnull)
+    ffmpeg = shutil.which("ffmpeg")
+    if ffmpeg is None:
+        raise RuntimeError(
+            "ffmpeg not found on PATH. Install with: "
+            "apt install ffmpeg  /  conda install ffmpeg"
+        )
+
+    cmd = [
+        ffmpeg,
+        "-i", str(video_path),
+        "-vn",                      # no video
+        "-ac", "1",                 # mono
+        "-ar", str(sample_rate),    # target sample rate
+        "-f", "f32le",              # raw 32-bit float PCM
+        "-loglevel", "error",       # suppress noisy codec warnings
+        "pipe:1",                   # write to stdout
+    ]
+
+    result = subprocess.run(
+        cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+
+    if result.returncode != 0:
+        stderr_msg = result.stderr.decode(errors="replace").strip()
+        raise RuntimeError(
+            f"ffmpeg failed (exit {result.returncode}) on {video_path}: {stderr_msg}"
+        )
+
+    audio = np.frombuffer(result.stdout, dtype=np.float32)
+    if len(audio) == 0:
+        raise RuntimeError(f"No audio stream found in {video_path}")
+
+    return audio
 
 
 class AudioProcessor:
@@ -55,20 +85,7 @@ class AudioProcessor:
             List of audio chunks (num_frames,), each as np.ndarray of shape (samples,)
         """
         try:
-            import librosa
-        except ImportError:
-            raise ImportError(
-                "librosa is required for audio processing. "
-                "Install with: pip install 'himu[asr]' or pip install 'himu[clap]'"
-            )
-
-        try:
-            with _suppress_c_stderr():
-                audio, sr = librosa.load(
-                    video_path,
-                    sr=sample_rate,
-                    mono=True
-                )
+            audio = _load_audio(video_path, sample_rate)
         except Exception as e:
             warnings.warn(f"Failed to load audio from {video_path}: {e}")
             return [np.array([], dtype=np.float32) for _ in timestamps]
@@ -111,21 +128,7 @@ class AudioProcessor:
             Audio array (samples,) or None if extraction fails
         """
         try:
-            import librosa
-        except ImportError:
-            raise ImportError(
-                "librosa is required for audio processing. "
-                "Install with: pip install 'himu[asr]' or pip install 'himu[clap]'"
-            )
-
-        try:
-            with _suppress_c_stderr():
-                audio, sr = librosa.load(
-                    video_path,
-                    sr=sample_rate,
-                    mono=True
-                )
-            return audio
+            return _load_audio(video_path, sample_rate)
         except Exception as e:
             warnings.warn(f"Failed to load audio from {video_path}: {e}")
             return None
@@ -133,17 +136,24 @@ class AudioProcessor:
     @staticmethod
     def get_audio_duration(video_path: str) -> Optional[float]:
         """Get duration of audio track in seconds."""
-        try:
-            import librosa
-        except ImportError:
-            raise ImportError(
-                "librosa is required for audio processing. "
-                "Install with: pip install 'himu[asr]' or pip install 'himu[clap]'"
-            )
+        ffprobe = shutil.which("ffprobe")
+        if ffprobe is None:
+            warnings.warn("ffprobe not found on PATH, cannot get audio duration")
+            return None
 
+        cmd = [
+            ffprobe,
+            "-v", "error",
+            "-select_streams", "a:0",
+            "-show_entries", "format=duration",
+            "-of", "csv=p=0",
+            str(video_path),
+        ]
         try:
-            duration = librosa.get_duration(path=video_path)
-            return duration
+            result = subprocess.run(
+                cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            )
+            return float(result.stdout.decode().strip())
         except Exception as e:
             warnings.warn(f"Failed to get audio duration from {video_path}: {e}")
             return None

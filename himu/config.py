@@ -10,14 +10,14 @@ class ExpertConfig:
     enabled: bool = True
     model_name: Optional[str] = None
     device: str = "cuda"
-    batch_size: int = 512  # Batch size for inference (used by YOLO)
+    batch_size: int = 512  # Batch size for inference (used by OVD)
 
 
 @dataclass
 class SmoothingConfig:
     """Bandwidth-matched smoothing configuration."""
     enabled: bool = True
-    visual_sigma: float = 0.5   # seconds - for CLIP, YOLO, OCR
+    visual_sigma: float = 0.5   # seconds - for CLIP, OVD, OCR
     speech_sigma: float = 1.5   # seconds - for ASR/Whisper
     audio_sigma: float = 2.0    # seconds - for CLAP
 
@@ -35,11 +35,11 @@ class CompositionConfig:
 @dataclass
 class SelectionConfig:
     """Frame selection configuration."""
-    mode: str = "score_ranked"  # "score_ranked", "peak_nms", or "peak_nms_v2"
+    mode: str = "pass"  # "pass" or "score_ranked"
     min_gap: Optional[int] = None  # Minimum gap between selected frames
     max_frames_per_window: Optional[int] = None  # Max frames in any time window (None=disabled)
     window_seconds: float = 4.0  # Window size in seconds for density constraint
-    peak_prominence: float = 0.01  # peak_nms: absolute prominence; peak_nms_v2: prominence ratio
+    peak_prominence: float = 0.01  # Prominence ratio for adaptive peak detection (pass only)
 
 
 @dataclass
@@ -56,7 +56,7 @@ class HiMuConfig:
     """Complete HiMu pipeline configuration."""
 
     # Expert configurations
-    yolo: ExpertConfig = field(default_factory=lambda: ExpertConfig(
+    ovd: ExpertConfig = field(default_factory=lambda: ExpertConfig(
         enabled=True, model_name="yolov8x-worldv2", batch_size=512
     ))
     clip: ExpertConfig = field(default_factory=lambda: ExpertConfig(
@@ -99,7 +99,7 @@ class HiMuConfig:
     def is_expert_enabled(self, expert_type: str) -> bool:
         """Check if an expert type is enabled."""
         expert_map = {
-            "YOLO": self.yolo,
+            "OVD": self.ovd,
             "CLIP": self.clip,
             "OCR": self.ocr,
             "ASR": self.asr,
@@ -111,7 +111,7 @@ class HiMuConfig:
     def get_expert_model_name(self, expert_type: str) -> Optional[str]:
         """Get model name for an expert type."""
         expert_map = {
-            "YOLO": self.yolo,
+            "OVD": self.ovd,
             "CLIP": self.clip,
             "OCR": self.ocr,
             "ASR": self.asr,
@@ -130,7 +130,7 @@ VISUAL_ONLY_CONFIG = HiMuConfig(
 )
 
 FAST_CONFIG = HiMuConfig(
-    yolo=ExpertConfig(enabled=False),
+    ovd=ExpertConfig(enabled=False),
     asr=ExpertConfig(enabled=False),
     clap=ExpertConfig(enabled=False),
     smoothing=SmoothingConfig(enabled=False),

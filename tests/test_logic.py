@@ -85,7 +85,7 @@ class TestTreeEvaluation:
             "op": "AND",
             "children": [
                 {"op": "LEAF", "expert": "CLIP", "query": "sunset"},
-                {"op": "LEAF", "expert": "YOLO", "query": "car"},
+                {"op": "LEAF", "expert": "OVD", "query": "car"},
             ],
         }
         scores = {
@@ -134,7 +134,7 @@ class TestTreeEvaluation:
                 {"op": "LEAF", "expert": "CLIP", "query": "sunset"},
                 {"op": "OR",
                  "children": [
-                     {"op": "LEAF", "expert": "YOLO", "query": "car"},
+                     {"op": "LEAF", "expert": "OVD", "query": "car"},
                      {"op": "LEAF", "expert": "ASR", "query": "driving"},
                  ]},
             ],
@@ -142,14 +142,14 @@ class TestTreeEvaluation:
         leaves = engine.collect_leaf_nodes(tree)
         assert len(leaves) == 3
         experts = {leaf["expert"] for _, leaf in leaves}
-        assert experts == {"CLIP", "YOLO", "ASR"}
+        assert experts == {"CLIP", "OVD", "ASR"}
 
     def test_group_leaves_by_expert(self, engine):
         leaves = [
             (0, {"op": "LEAF", "expert": "CLIP", "query": "a"}),
             (1, {"op": "LEAF", "expert": "CLIP", "query": "b"}),
-            (2, {"op": "LEAF", "expert": "YOLO", "query": "c"}),
+            (2, {"op": "LEAF", "expert": "OVD", "query": "c"}),
         ]
         grouped = engine.group_leaves_by_expert(leaves)
         assert len(grouped["CLIP"]) == 2
-        assert len(grouped["YOLO"]) == 1
+        assert len(grouped["OVD"]) == 1
