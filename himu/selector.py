@@ -109,12 +109,14 @@ class HiMuSelector:
         # Cache
         effective_cache_dir = cache_dir or self.config.cache_dir
         self.cache = FeatureCache(effective_cache_dir) if effective_cache_dir else None
+        self._memory_cache: dict = {}
 
         # Engine
         self.engine = MultiGPUEngine(
             config=self.config,
             device=self.device,
             cache=self.cache,
+            memory_cache=self._memory_cache,
         )
 
     # ------------------------------------------------------------------
@@ -298,17 +300,22 @@ class HiMuSelector:
     def cache_features(self, video_path: str, fps: Optional[float] = None) -> Dict[str, bool]:
         """Pre-extract and cache query-independent features for a video.
 
-        Useful for corpus pre-processing: run once, then fast per-query
-        selection without re-loading expert models.
+        Populates the in-memory cache (always) and disk cache (if cache_dir
+        was configured).  Useful for corpus pre-processing: run once, then
+        fast per-query selection without re-loading expert models.
 
         Returns:
             Dict indicating which features were cached.
         """
-        if self.cache is None:
-            raise ValueError("No cache_dir configured. Pass cache_dir to HiMuSelector.")
-
         fps = fps or self.config.fps
-        status = self.cache.get_cache_status(video_path, fps)
+        mk = self.engine._mem_key(video_path, fps)
+        mem = self._memory_cache.get(mk, {})
+
+        status = {"CLIP": "CLIP" in mem, "OCR": "OCR" in mem,
+                  "ASR": "ASR" in mem, "CLAP": False}
+        if self.cache:
+            disk_status = self.cache.get_cache_status(video_path, fps)
+            status = {k: status[k] or disk_status[k] for k in status}
 
         with VideoProcessor(video_path, fps=fps) as vp:
             frames_arr, timestamps_arr = vp.extract_frames()
@@ -317,14 +324,18 @@ class HiMuSelector:
         if self.config.clip.enabled and not status["CLIP"]:
             expert = self.engine._get_expert("CLIP")
             embeddings = expert.extract_embeddings(frames_arr)
-            self.cache.save_clip(video_path, fps, embeddings)
+            mem["CLIP"] = embeddings
+            if self.cache:
+                self.cache.save_clip(video_path, fps, embeddings)
             status["CLIP"] = True
 
         # OCR
         if self.config.ocr.enabled and not status["OCR"]:
             expert = self.engine._get_expert("OCR")
             texts = expert._extract_text_from_frames_batch(list(frames_arr))
-            self.cache.save_ocr(video_path, fps, texts)
+            mem["OCR"] = texts
+            if self.cache:
+                self.cache.save_ocr(video_path, fps, texts)
             status["OCR"] = True
 
         # ASR
@@ -333,12 +344,14 @@ class HiMuSelector:
             if full_audio is not None:
                 expert = self.engine._get_expert("ASR")
                 segments = expert._transcribe_audio(full_audio, sample_rate=16000)
-                self.cache.save_asr(video_path, fps, segments)
+                mem["ASR"] = segments
+                if self.cache:
+                    self.cache.save_asr(video_path, fps, segments)
                 status["ASR"] = True
 
         # CLAP — no query-independent embeddings to cache in current design
-        # (CLAP computes audio-text similarity per query)
 
+        self._memory_cache[mk] = mem
         del frames_arr
         gc.collect()
 

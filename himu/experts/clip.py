@@ -150,6 +150,7 @@ class OpenCLIPExpert(BaseExpert):
         frame_embeddings = cached_embeddings
         if frame_embeddings is None:
             frame_embeddings = self.extract_embeddings(frames)
+        self._last_embeddings = frame_embeddings
 
         with self.torch.no_grad(), self.torch.amp.autocast('cuda', enabled=self.use_amp):
             text_tokens = self.tokenizer(queries).to(self.device)
@@ -184,6 +185,7 @@ class OpenCLIPExpert(BaseExpert):
         frame_embeddings = cached_embeddings
         if frame_embeddings is None:
             frame_embeddings = self.extract_embeddings(frames)
+        self._last_embeddings = frame_embeddings
 
         scores = {}
         with self.torch.no_grad(), self.torch.amp.autocast('cuda', enabled=self.use_amp):

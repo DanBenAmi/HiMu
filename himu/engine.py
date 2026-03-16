@@ -8,6 +8,7 @@ allocation for future parallel execution.
 
 import gc
 import logging
+from pathlib import Path as _Path
 from typing import Dict, List, Optional, Tuple
 
 import numpy as np
@@ -42,10 +43,12 @@ class MultiGPUEngine:
         config: HiMuConfig,
         device: str = "cuda",
         cache: Optional[FeatureCache] = None,
+        memory_cache: Optional[Dict] = None,
     ):
         self.config = config
         self.device = device
         self.cache = cache
+        self.memory_cache = memory_cache if memory_cache is not None else {}
         self.gpu_map = config.gpu_map  # Dict[str, List[int]] or None
         self._expert_cache: Dict[str, object] = {}
 
@@ -146,6 +149,9 @@ class MultiGPUEngine:
     # Per-expert routing
     # ------------------------------------------------------------------
 
+    def _mem_key(self, video_path: str, fps: float) -> str:
+        return f"{_Path(video_path).resolve()}:{fps}"
+
     def _run_single_expert(
         self,
         expert_type: str,
@@ -160,34 +166,64 @@ class MultiGPUEngine:
         subtitle_segments: Optional[List[Tuple[float, float, str]]] = None,
     ) -> Dict[str, np.ndarray]:
         """Route a single expert type to the correct inference path."""
+        mk = self._mem_key(video_path, fps)
+        mem = self.memory_cache.get(mk, {})
 
-        # ----- OCR with disk cache -----
-        if expert_type == "OCR" and self.cache and self.cache.has_ocr(video_path, fps):
-            cached_texts = self.cache.load_ocr(video_path, fps)
-            return self._compute_ocr_scores_from_cache(queries, cached_texts, num_frames)
+        # ----- OCR: memory cache → disk cache → compute -----
+        if expert_type == "OCR":
+            if "OCR" in mem:
+                log.info("OCR: using in-memory cached texts")
+                return self._compute_ocr_scores_from_cache(queries, mem["OCR"], num_frames)
+            if self.cache and self.cache.has_ocr(video_path, fps):
+                cached_texts = self.cache.load_ocr(video_path, fps)
+                mem["OCR"] = cached_texts
+                self.memory_cache[mk] = mem
+                return self._compute_ocr_scores_from_cache(queries, cached_texts, num_frames)
 
-        # ----- CLIP with disk cache -----
+        # ----- CLIP: memory cache → disk cache -----
         cached_clip = None
-        if expert_type == "CLIP" and self.cache and self.cache.has_clip(video_path, fps):
-            cached_clip = self.cache.load_clip(video_path, fps)
+        if expert_type == "CLIP":
+            if "CLIP" in mem:
+                log.info("CLIP: using in-memory cached embeddings")
+                cached_clip = mem["CLIP"]
+            elif self.cache and self.cache.has_clip(video_path, fps):
+                cached_clip = self.cache.load_clip(video_path, fps)
+                mem["CLIP"] = cached_clip
+                self.memory_cache[mk] = mem
 
-        # ----- ASR with disk cache -----
-        if expert_type == "ASR" and self.cache and self.cache.has_asr(video_path, fps):
-            cached_segments = self.cache.load_asr(video_path, fps)
-            subtitle_segments = cached_segments
+        # ----- ASR: memory cache → disk cache -----
+        if expert_type == "ASR":
+            if "ASR" in mem:
+                log.info("ASR: using in-memory cached segments")
+                subtitle_segments = mem["ASR"]
+            elif self.cache and self.cache.has_asr(video_path, fps):
+                cached_segments = self.cache.load_asr(video_path, fps)
+                mem["ASR"] = cached_segments
+                self.memory_cache[mk] = mem
+                subtitle_segments = cached_segments
 
         # Load expert model
         expert = self._get_expert(expert_type)
 
         if expert_type == "CLIP":
-            return self._run_clip(expert, frames, queries, cached_clip)
+            result = self._run_clip(expert, frames, queries, cached_clip)
+            # Save embeddings to memory cache if freshly computed
+            if cached_clip is None and hasattr(expert, '_last_embeddings'):
+                mem["CLIP"] = expert._last_embeddings
+                self.memory_cache[mk] = mem
+                if self.cache and not self.cache.has_clip(video_path, fps):
+                    self.cache.save_clip(video_path, fps, expert._last_embeddings)
+            return result
 
         elif expert_type == "OCR":
             batch_scores = expert.compute_batch_scores(frames, queries)
-            # Save to cache if available
-            if self.cache and hasattr(expert, 'detect_text_batch'):
+            # Save texts to memory + disk cache
+            if hasattr(expert, 'detect_text_batch'):
                 texts = expert.detect_text_batch(frames)
-                self.cache.save_ocr(video_path, fps, texts)
+                mem["OCR"] = texts
+                self.memory_cache[mk] = mem
+                if self.cache:
+                    self.cache.save_ocr(video_path, fps, texts)
             return batch_scores
 
         elif expert_type == "OVD":
@@ -196,9 +232,16 @@ class MultiGPUEngine:
             )
 
         elif expert_type == "ASR":
-            return self._run_asr(
+            result = self._run_asr(
                 expert, queries, full_audio, timestamps, fps, subtitle_segments
             )
+            # Save ASR segments to memory cache if freshly transcribed
+            if "ASR" not in mem and hasattr(expert, '_last_segments') and expert._last_segments is not None:
+                mem["ASR"] = expert._last_segments
+                self.memory_cache[mk] = mem
+                if self.cache and not self.cache.has_asr(video_path, fps):
+                    self.cache.save_asr(video_path, fps, expert._last_segments)
+            return result
 
         elif expert_type == "CLAP":
             if audio_chunks is None:

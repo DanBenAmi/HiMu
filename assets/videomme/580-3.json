@@ -2,16 +2,16 @@
   "question_id": "580-3",
   "video_id": "LVRcD_-ht3g",
   "video_path": "assets/videomme/LVRcD_-ht3g.mp4",
-  "question": "What does a black elephant do in this video?",
+  "question": "What does an elephant do in this video?",
   "candidates": [
-    "A. Helping a man in river.",
+    "A. Washing itself.",
     "B. Finding fishes for food.",
     "C. Going across the river.",
-    "D. Washing itself."
+    "D. Helping a man in river."
   ],
-  "answer": "A. Helping a man in river.",
-  "answer_letter": "A",
-  "answer_index": 0,
+  "answer": "D. Helping a man in river.",
+  "answer_letter": "D",
+  "answer_index": 3,
   "subtitle_path": "assets/videomme/LVRcD_-ht3g.srt",
   "metadata": {
     "task_type": "Action Recognition",

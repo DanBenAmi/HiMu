@@ -326,8 +326,10 @@ class ASRExpert(BaseExpert):
         if pre_segments is not None:
             log.info(f"Using {len(pre_segments)} pre-loaded subtitle segments (skipping Whisper)")
             segments = pre_segments
+            self._last_segments = None  # not a fresh transcription
         else:
             segments = self._transcribe_audio(audio, sample_rate)
+            self._last_segments = segments
 
         long_queries = [q for q in queries if len(q.split()) >= self._SEMANTIC_MIN_WORDS]
 

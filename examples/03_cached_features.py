@@ -1,5 +1,9 @@
 """Feature caching: extract once, query many times fast.
 
+By default, features are cached in memory — no disk I/O needed.
+Set USE_DISK_CACHE = True to also persist features to disk so they
+survive across sessions.
+
 Uses sample Video-MME questions.
 Run `python assets/videomme/download_video.py` first to get the video.
 """
@@ -19,6 +23,12 @@ CUSTOM_VIDEO_PATH = ""           # e.g. "/path/to/my_video.mp4"
 CUSTOM_QUESTION = ""             # e.g. "What happens after the explosion?"
 CUSTOM_CANDIDATES = []           # e.g. ["A. Fire", "B. Smoke", "C. Nothing", "D. Rain"]
 
+# ── Disk caching (optional) ─────────────────────────────────────────
+# In-memory caching is always active. Set this to True to also persist
+# features to disk for reuse across separate runs.
+USE_DISK_CACHE = False
+DISK_CACHE_DIR = "/tmp/himu_cache"
+
 # ── Load input ───────────────────────────────────────────────────────
 repo_root = Path(__file__).resolve().parent.parent
 
@@ -37,9 +47,13 @@ else:
 
 # Use local Qwen3-VL for tree parsing
 llm = create_llm("qwen3vl", model="Qwen/Qwen3-VL-8B-Instruct", device="cuda:1")
-selector = HiMuSelector(llm=llm, device="cuda:0", cache_dir="/tmp/himu_cache")
+selector = HiMuSelector(
+    llm=llm,
+    device="cuda:0",
+    cache_dir=DISK_CACHE_DIR if USE_DISK_CACHE else None,
+)
 
-# First call: extracts and caches CLIP, OCR, ASR features
+# Pre-extract features (populates in-memory cache; also writes to disk if enabled)
 status = selector.cache_features(video_path)
 print(f"Cached: {status}")
 
