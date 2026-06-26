@@ -249,10 +249,10 @@ Accuracy on Video-MME, LongVideoBench_val, and HERBench-Lite. All methods select
 
 | Model | Method | Short | Medium | Long | Overall | LVB_val | HERBench-Lite |
 |-------|--------|-------|--------|------|---------|---------|---------------|
-| Qwen3-VL-8B | Uniform | 76.3 | 66.3 | 55.6 | 66.4 | 55.7 | 41.7 |
+| Qwen3-VL-8B | Uniform | 76.3 | 66.3 | 55.6 | 66.1 | 55.7 | 41.7 |
 | Qwen3-VL-8B | **HiMu** | **78.6** | **71.0** | **69.9** | **73.2** | **64.2** | **43.2** |
 | | | | | | | | |
-| LLaVA-OV-1.5-8B | Uniform | **72.3** | 62.3 | 54.9 | 63.6 | 54.3 | 35.8 |
+| LLaVA-OV-1.5-8B | Uniform | **72.3** | 62.3 | 54.9 | 63.2 | 54.3 | 35.8 |
 | LLaVA-OV-1.5-8B | **HiMu** | 71.9 | **67.0** | **63.9** | **67.6** | **57.9** | **35.9** |
 | | | | | | | | |
 | InternVL-3.5-8B | Uniform | 75.4 | 67.4 | 56.6 | 66.6 | 59.2 | 38.3 |
