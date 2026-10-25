@@ -2,9 +2,9 @@
 
 **Training-free, plug-and-play frame selection for long-form video question answering.**
 
-🎉 **Accepted to WACV 2027!**
+**Accepted to WACV 2027!**
 
-[📄 Paper (arXiv)](https://arxiv.org/abs/2603.18558) · [🌐 Project Page](https://danbenami.github.io/HiMu.io/)
+[Paper (arXiv)](https://arxiv.org/abs/2603.18558) · [Project Page](https://danbenami.github.io/HiMu.io/)
 
 HiMu selects the K most question-relevant frames from any video for your downstream Vision-Language Model (VLM). No fine-tuning required.
 
