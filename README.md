@@ -2,6 +2,10 @@
 
 **Training-free, plug-and-play frame selection for long-form video question answering.**
 
+🎉 **Accepted to WACV 2027!**
+
+[📄 Paper (arXiv)](https://arxiv.org/abs/2603.18558) · [🌐 Project Page](https://danbenami.github.io/HiMu.io/)
+
 HiMu selects the K most question-relevant frames from any video for your downstream Vision-Language Model (VLM). No fine-tuning required.
 
 
@@ -273,6 +277,19 @@ Accuracy on Video-MME, LongVideoBench_val, and HERBench-Lite. All methods select
 _*Proprietary LVLMs evaluated on a stratified random 25% subset of each benchmark._
 
 HiMu at 16 frames outperforms uniform sampling at 64 frames — a **4x frame budget reduction**.
+
+## Citation
+
+If you find HiMu useful, please cite the paper (accepted to WACV 2027):
+
+```bibtex
+@article{benami2026himu,
+  title   = {HiMu: Hierarchical Multimodal Frame Selection for Long Video Question Answering},
+  author  = {Ben-Ami, Dan and Serussi, Gabriele and Cohen, Kobi and Baskin, Chaim},
+  journal = {arXiv preprint arXiv:2603.18558},
+  year    = {2026}
+}
+```
 
 ## License
 
